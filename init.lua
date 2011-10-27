@@ -1,20 +1,15 @@
-local assert , error = assert , error
-local setmetatable = setmetatable
+-- FFI binding to OpenAL
 
 local rel_dir = ...
 
--- FFI binding to OpenAL
-local path_to_include = rel_dir .. "/" --[[C:\Program Files (x86)\OpenAL 1.1 SDK\include\]]
-local dynlibname
-if jit.os == "Windows" then
-	dynlibname = [[OpenAL32.dll]]
-elseif jit.os == "Linux" or jit.os == "OSX" or jit.os == "POSIX" or jit.os == "BSD" then
-	dynlibname = "libopenal.so"
-end
+local assert , error = assert , error
+local setmetatable = setmetatable
 
 local general 				= require"general"
 local reverse_lookup		= general.reverse_lookup
 local add_dep 				= general.add_dependancy
+
+local jit = require"jit"
 
 local ffi = require"ffi"
 local ffi_util = require"ffi_util"
@@ -22,7 +17,8 @@ local ffi_add_include_dir 	= ffi_util.ffi_add_include_dir
 local ffi_defs 				= ffi_util.ffi_defs
 local ffi_process_defines 	= ffi_util.ffi_process_defines
 
-ffi_add_include_dir ( path_to_include )
+ffi_add_include_dir ( rel_dir .. "/" )
+ffi_add_include_dir [[C:\Program Files (x86)\OpenAL 1.1 SDK\include\]]
 ffi_add_include_dir [[/usr/include/AL/]]
 
 ffi_defs ( rel_dir..[[/defs.h]] , { --TODO: remove rel_dir
@@ -33,10 +29,18 @@ local openal_defs = {}
 ffi_process_defines( [[al.h]] , openal_defs )
 ffi_process_defines( [[alc.h]], openal_defs )
 
-local openal_lib = ffi.load ( dynlibname )
+local openal_lib
+if jit.os == "Windows" then
+	openal_lib = ffi.load ( [[OpenAL32.dll]] )
+elseif jit.os == "Linux" or jit.os == "OSX" or jit.os == "POSIX" or jit.os == "BSD" then
+	openal_lib = ffi.load ( [[libopenal.so]] )
+else
+	error ( "Unknown platform" )
+end
 
 local openal = setmetatable ( { } , { __index = function ( t , k ) return openal_defs[k] or openal_lib[k] end ; } )
 
+-- Some variables to be used temporarily
 local int = ffi.new ( "ALint[1]" )
 local uint = ffi.new ( "ALuint[1]" )
 local float = ffi.new ( "ALfloat[1]" )
@@ -46,6 +50,7 @@ openal.sourcetypes = {
 	[openal_defs.AL_STREAMING] 		= "streaming" ;
 	[openal_defs.AL_UNDETERMINED] 	= "undetermined" ;
 }
+
 openal.format = {
 	MONO8 			= openal_defs.AL_FORMAT_MONO8 ;
 	MONO16 			= openal_defs.AL_FORMAT_MONO16 ;
@@ -72,6 +77,7 @@ openal.format_to_channels = {
 	["61CHN16"] 	= 7 ;
 	["71CHN16"] 	= 8 ;
 }
+
 openal.format_to_type = {
 	MONO8 			= "int8_t" ;
 	MONO16 			= "int16_t" ;
@@ -84,11 +90,13 @@ openal.format_to_type = {
 	["61CHN16"] 	= "int16_t" ;
 	["71CHN16"] 	= "int16_t" ;
 }
+
 --[[openal.type_to_scale = {
 	["int8_t"] = 		2^(8-1)-1 ;
 	["int16_t"] = 		2^(16-1)-1 ;
 	["float"] = 		1 ;
 }--]]
+
 openal.error = {
 	[openal_defs.AL_NO_ERROR] 			= "No Error." ;
 	[openal_defs.AL_INVALID_NAME] 		= "Invalid Name paramater passed to AL call." ;
@@ -97,6 +105,7 @@ openal.error = {
 	[openal_defs.AL_INVALID_OPERATION] 	= "Illegal call." ;
 	[openal_defs.AL_OUT_OF_MEMORY] 		= "Out of memory." ;
 }
+
 local function checkforerror ( )
 	local e = openal.alGetError ( )
 	return e == openal_defs.AL_NO_ERROR , openal.error[e]
