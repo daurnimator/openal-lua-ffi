@@ -1,25 +1,25 @@
 -- FFI binding to OpenAL
 
-local rel_dir = ...
-
 local assert , error = assert , error
 local setmetatable = setmetatable
 
 local general 				= require"general"
+local current_script_dir 	= general.current_script_dir
 local reverse_lookup		= general.reverse_lookup
 local add_dep 				= general.add_dependancy
 
-local ffi = require"ffi"
-local ffi_util = require"ffi_util"
+local rel_dir = assert ( current_script_dir ( ) , "Current directory unknown" )
+
+local ffi 					= require"ffi"
+local ffi_util 				= require"ffi_util"
 local ffi_add_include_dir 	= ffi_util.ffi_add_include_dir
 local ffi_defs 				= ffi_util.ffi_defs
 local ffi_process_defines 	= ffi_util.ffi_process_defines
 
-ffi_add_include_dir ( rel_dir .. "/" )
 ffi_add_include_dir [[C:\Program Files (x86)\OpenAL 1.1 SDK\include\]]
 ffi_add_include_dir [[/usr/include/AL/]]
 
-ffi_defs ( rel_dir..[[/defs.h]] , { --TODO: remove rel_dir
+ffi_defs ( rel_dir .. [[defs.h]] , {
 		[[al.h]] ;
 		[[alc.h]] ;
 	} )
@@ -28,11 +28,11 @@ ffi_process_defines( [[al.h]] , openal_defs )
 ffi_process_defines( [[alc.h]], openal_defs )
 
 local openal_lib
-assert(jit,"jit table unavailable")
+assert ( jit , "jit table unavailable" )
 if jit.os == "Windows" then
-	openal_lib = ffi.load ( [[OpenAL32.dll]] )
+	openal_lib = ffi.load ( [[OpenAL32]] )
 elseif jit.os == "Linux" or jit.os == "OSX" or jit.os == "POSIX" or jit.os == "BSD" then
-	openal_lib = ffi.load ( [[libopenal.so]] )
+	openal_lib = ffi.load ( [[libopenal]] )
 else
 	error ( "Unknown platform" )
 end
