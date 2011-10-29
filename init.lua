@@ -9,8 +9,6 @@ local general 				= require"general"
 local reverse_lookup		= general.reverse_lookup
 local add_dep 				= general.add_dependancy
 
-local jit = require"jit"
-
 local ffi = require"ffi"
 local ffi_util = require"ffi_util"
 local ffi_add_include_dir 	= ffi_util.ffi_add_include_dir
@@ -30,6 +28,7 @@ ffi_process_defines( [[al.h]] , openal_defs )
 ffi_process_defines( [[alc.h]], openal_defs )
 
 local openal_lib
+assert(jit,"jit table unavailable")
 if jit.os == "Windows" then
 	openal_lib = ffi.load ( [[OpenAL32.dll]] )
 elseif jit.os == "Linux" or jit.os == "OSX" or jit.os == "POSIX" or jit.os == "BSD" then
@@ -57,7 +56,7 @@ openal.format = {
 	STEREO8 		= openal_defs.AL_FORMAT_STEREO8 ;
 	STEREO16 		= openal_defs.AL_FORMAT_STEREO16 ;
 	MONO_FLOAT32 	= openal.alGetEnumValue ( "AL_FORMAT_MONO_FLOAT32" ) ;
-    STEREO_FLOAT32 	= openal.alGetEnumValue ( "AL_FORMAT_STEREO_FLOAT32" ) ;
+	STEREO_FLOAT32 	= openal.alGetEnumValue ( "AL_FORMAT_STEREO_FLOAT32" ) ;
 	["QUAD16"] 		= openal.alGetEnumValue ( "AL_FORMAT_QUAD16" ) ;
 	["51CHN16"] 	= openal.alGetEnumValue ( "AL_FORMAT_51CHN16" ) ;
 	["61CHN16"] 	= openal.alGetEnumValue ( "AL_FORMAT_61CHN16" ) ;
