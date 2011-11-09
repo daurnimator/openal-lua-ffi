@@ -210,6 +210,16 @@ source_methods.pause = function ( s )
 	assert(checkforerror())
 end
 
+source_methods.stop = function ( s )
+	openal.alSourceStop ( s.id )
+	assert(checkforerror())
+end
+
+source_methods.rewind = function ( s )
+	openal.alSourceRewind ( s.id )
+	assert(checkforerror())
+end
+
 source_methods.state = function ( s )
 	openal.alGetSourcei ( s.id , openal.AL_SOURCE_STATE , int)
 	return int[0]
@@ -226,11 +236,7 @@ source_methods.unqueue = function ( s , n , buffer )
 end
 
 source_methods.clear = function ( s )
-	local queued = s:buffers_queued()
-	for i=1,queued do
-		s:unqueue(s,1,uint)
-	end
-	return queued
+	openal.alSourcei ( s.id , openal_defs.AL_BUFFER , 0 )
 	assert(checkforerror())
 end
 
@@ -244,6 +250,19 @@ source_methods.setvolume = function ( s , v )
 	openal.alSourcef ( s.id , openal_defs.AL_GAIN , v )
 	assert(checkforerror())
 end
+
+source_methods.position = function ( s )
+	openal.alGetSourcei ( s.id , openal_defs.AL_SAMPLE_OFFSET , int )
+	assert(checkforerror())
+	return int[0]
+end
+
+source_methods.position_seconds = function ( s )
+	openal.alGetSourcef ( s.id , openal_defs.AL_SEC_OFFSET , float )
+	assert(checkforerror())
+	return float[0]
+end
+
 
 source_mt.__gc = source_methods.delete
 
@@ -278,7 +297,9 @@ function openal.buffer_info ( b )
 	openal.alGetBufferi ( b , openal_defs.AL_CHANNELS , int )
 	r.channels = int[0]
 
-	r.duration = r.size / ( r.channels * r.bits/8 * r.frequency )
+	assert(checkforerror())
+	r.frames = r.size / ( r.channels * r.bits/8 )
+	r.duration =  r.frames / r.frequency
 
 	return r
 end
