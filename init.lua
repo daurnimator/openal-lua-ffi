@@ -122,6 +122,7 @@ local current_context = openal.alcGetCurrentContext ( )
 function openal.alcMakeContextCurrent ( ctx )
 	current_context = ctx
 	openal_lib.alcMakeContextCurrent ( ctx )
+	assert(checkforerror())
 end
 
 function openal.alcGetCurrentContext ( ctx )
@@ -146,11 +147,13 @@ end
 
 function openal.getvolume ( )
 	openal.alGetListenerf ( openal_defs.AL_GAIN , float )
+	assert(checkforerror())
 	return float[0]
 end
 
 function openal.setvolume ( v )
 	openal.alListenerf ( openal_defs.AL_GAIN , v )
+	assert(checkforerror())
 end
 
 --- OpenAL Source
@@ -167,10 +170,12 @@ source_methods.delete = function ( s )
 	print("GC SOURCE")
 	uint[0] = s.id
 	openal.alDeleteSources ( 1 , uint )
+	assert(checkforerror())
 end
 
 source_methods.isvalid = function ( s )
 	local r = openal.alIsSource ( s.id )
+	assert(checkforerror())
 	if r == 1 then return true
 	elseif r == 0 then return false
 	else error()
@@ -179,25 +184,30 @@ end
 
 source_methods.buffers_queued = function ( s )
 	openal.alGetSourcei ( s.id , openal_defs.AL_BUFFERS_QUEUED , int )
+	assert(checkforerror())
 	return int[0]
 end
 
 source_methods.buffers_processed = function ( s )
 	openal.alGetSourcei ( s.id , openal_defs.AL_BUFFERS_PROCESSED , int )
+	assert(checkforerror())
 	return int[0]
 end
 
 source_methods.type = function ( s )
 	openal.alGetSourcei ( s.id , openal_defs.AL_SOURCE_TYPE , int )
-	return openal.sourcetypes[ int[0] ] or error("Unknown Source Type")
+	assert(checkforerror())
+	return openal.sourcetypes [ int[0] ] or error ( "Unknown Source Type" )
 end
 
 source_methods.play = function ( s )
 	openal.alSourcePlay ( s.id )
+	assert(checkforerror())
 end
 
 source_methods.pause = function ( s )
 	openal.alSourcePause ( s.id )
+	assert(checkforerror())
 end
 
 source_methods.state = function ( s )
@@ -207,10 +217,12 @@ end
 
 source_methods.queue = function ( s , n , buffer )
 	openal.alSourceQueueBuffers ( s.id , n , buffer )
+	assert(checkforerror())
 end
 
 source_methods.unqueue = function ( s , n , buffer )
 	openal.alSourceUnqueueBuffers ( s.id , n , buffer )
+	assert(checkforerror())
 end
 
 source_methods.clear = function ( s )
@@ -219,15 +231,18 @@ source_methods.clear = function ( s )
 		s:unqueue(s,1,uint)
 	end
 	return queued
+	assert(checkforerror())
 end
 
 source_methods.getvolume = function ( s )
 	openal.alGetSourcef ( s.id , openal_defs.AL_GAIN , float )
+	assert(checkforerror())
 	return float[0]
 end
 
 source_methods.setvolume = function ( s , v )
 	openal.alSourcef ( s.id , openal_defs.AL_GAIN , v )
+	assert(checkforerror())
 end
 
 source_mt.__gc = source_methods.delete
