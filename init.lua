@@ -222,7 +222,12 @@ end
 
 source_methods.state = function ( s )
 	openal.alGetSourcei ( s.id , openal.AL_SOURCE_STATE , int)
-	return int[0]
+	assert(checkforerror())
+	if int[0] == openal_defs.AL_INITIAL then return "initial"
+	elseif int[0] == openal_defs.AL_PLAYING then return "playing"
+	elseif int[0] == openal_defs.AL_PAUSED then return "paused"
+	elseif int[0] == openal_defs.AL_STOPPED then return "stopped"
+	else return int[0] end
 end
 
 source_methods.queue = function ( s , n , buffer )
