@@ -252,4 +252,20 @@ function openal.isbuffer ( b )
 	end
 end
 
+function openal.buffer_info ( b )
+	local r = { }
+	openal.alGetBufferi ( b , openal_defs.AL_FREQUENCY , int )
+	r.frequency = int[0]
+	openal.alGetBufferi ( b , openal_defs.AL_SIZE , int )
+	r.size = int[0]
+	openal.alGetBufferi ( b , openal_defs.AL_BITS , int )
+	r.bits = int[0]
+	openal.alGetBufferi ( b , openal_defs.AL_CHANNELS , int )
+	r.channels = int[0]
+
+	r.duration = r.size / ( r.channels * r.bits/8 * r.frequency )
+
+	return r
+end
+
 return openal
