@@ -96,20 +96,46 @@ openal.format_to_type = {
 	["float"] = 		1 ;
 }--]]
 
-openal.error = {
-	[openal_defs.AL_NO_ERROR] 			= "No Error." ;
-	[openal_defs.AL_INVALID_NAME] 		= "Invalid Name paramater passed to AL call." ;
-	[openal_defs.AL_ILLEGAL_ENUM] 		= "Invalid parameter passed to AL call." ;
-	[openal_defs.AL_INVALID_VALUE] 		= "Invalid enum parameter value." ;
-	[openal_defs.AL_INVALID_OPERATION] 	= "Illegal call." ;
-	[openal_defs.AL_OUT_OF_MEMORY] 		= "Out of memory." ;
+openal.errormsg = {
+	AL_NO_ERROR 			= "No Error." ;
+	AL_INVALID_NAME 		= "Invalid Name paramater passed to AL call." ;
+	AL_ILLEGAL_ENUM 		= "Invalid parameter passed to AL call." ;
+	AL_INVALID_VALUE 		= "Invalid enum parameter value." ;
+	AL_INVALID_OPERATION 	= "Illegal call." ;
+	AL_OUT_OF_MEMORY 		= "Out of memory." ;
 }
 
-local function checkforerror ( )
+openal.error = {
+	[openal_defs.AL_NO_ERROR] 			= "AL_NO_ERROR" ;
+	[openal_defs.AL_INVALID_NAME] 		= "AL_INVALID_NAME" ;
+	[openal_defs.AL_ILLEGAL_ENUM] 		= "AL_ILLEGAL_ENUM" ;
+	[openal_defs.AL_INVALID_VALUE] 		= "AL_INVALID_VALUE" ;
+	[openal_defs.AL_INVALID_OPERATION] 	= "AL_INVALID_OPERATION" ;
+	[openal_defs.AL_OUT_OF_MEMORY] 		= "AL_OUT_OF_MEMORY" ;
+}
+
+
+local function al_checkerr ( )
 	local e = openal.alGetError ( )
-	return e == openal_defs.AL_NO_ERROR , openal.error[e]
+	local ename = openal.error [ e ]
+	if ename == "AL_NO_ERROR" then
+		return true
+	else
+		return false , ename
+	end
 end
-openal.checkforerror = checkforerror
+
+local function al_assert ( lvl )
+	lvl = lvl or 1
+	local ok , ename = al_checkerr ( )
+	if ok then
+		return ok
+	else
+		local emsg = openal.errormsg [ ename ]
+		return error ( ename .. ": " .. emsg , lvl )
+	end
+end
+openal.assert = al_assert
 
 function openal.opendevice ( name )
 	local dev = assert ( openal.alcOpenDevice ( name ) , "Can't Open Device" )
@@ -122,7 +148,7 @@ local current_context = openal.alcGetCurrentContext ( )
 function openal.alcMakeContextCurrent ( ctx )
 	current_context = ctx
 	openal_lib.alcMakeContextCurrent ( ctx )
-	assert(checkforerror())
+	al_assert ( )
 end
 
 function openal.alcGetCurrentContext ( ctx )
@@ -147,13 +173,13 @@ end
 
 function openal.getvolume ( )
 	openal.alGetListenerf ( openal_defs.AL_GAIN , float )
-	assert(checkforerror())
+	al_assert ( )
 	return float[0]
 end
 
 function openal.setvolume ( v )
 	openal.alListenerf ( openal_defs.AL_GAIN , v )
-	assert(checkforerror())
+	al_assert ( )
 end
 
 --- OpenAL Source
@@ -170,12 +196,12 @@ source_methods.delete = function ( s )
 	print("GC SOURCE")
 	uint[0] = s.id
 	openal.alDeleteSources ( 1 , uint )
-	assert(checkforerror())
+	al_assert ( )
 end
 
 source_methods.isvalid = function ( s )
 	local r = openal.alIsSource ( s.id )
-	assert(checkforerror())
+	al_assert ( )
 	if r == 1 then return true
 	elseif r == 0 then return false
 	else error()
@@ -184,45 +210,45 @@ end
 
 source_methods.buffers_queued = function ( s )
 	openal.alGetSourcei ( s.id , openal_defs.AL_BUFFERS_QUEUED , int )
-	assert(checkforerror())
+	al_assert ( )
 	return int[0]
 end
 
 source_methods.buffers_processed = function ( s )
 	openal.alGetSourcei ( s.id , openal_defs.AL_BUFFERS_PROCESSED , int )
-	assert(checkforerror())
+	al_assert ( )
 	return int[0]
 end
 
 source_methods.type = function ( s )
 	openal.alGetSourcei ( s.id , openal_defs.AL_SOURCE_TYPE , int )
-	assert(checkforerror())
+	al_assert ( )
 	return openal.sourcetypes [ int[0] ] or error ( "Unknown Source Type" )
 end
 
 source_methods.play = function ( s )
 	openal.alSourcePlay ( s.id )
-	assert(checkforerror())
+	al_assert ( )
 end
 
 source_methods.pause = function ( s )
 	openal.alSourcePause ( s.id )
-	assert(checkforerror())
+	al_assert ( )
 end
 
 source_methods.stop = function ( s )
 	openal.alSourceStop ( s.id )
-	assert(checkforerror())
+	al_assert ( )
 end
 
 source_methods.rewind = function ( s )
 	openal.alSourceRewind ( s.id )
-	assert(checkforerror())
+	al_assert ( )
 end
 
 source_methods.state = function ( s )
 	openal.alGetSourcei ( s.id , openal.AL_SOURCE_STATE , int)
-	assert(checkforerror())
+	al_assert ( )
 	if int[0] == openal_defs.AL_INITIAL then return "initial"
 	elseif int[0] == openal_defs.AL_PLAYING then return "playing"
 	elseif int[0] == openal_defs.AL_PAUSED then return "paused"
@@ -232,39 +258,39 @@ end
 
 source_methods.queue = function ( s , n , buffer )
 	openal.alSourceQueueBuffers ( s.id , n , buffer )
-	assert(checkforerror())
+	al_assert ( )
 end
 
 source_methods.unqueue = function ( s , n , buffer )
 	openal.alSourceUnqueueBuffers ( s.id , n , buffer )
-	assert(checkforerror())
+	al_assert ( )
 end
 
 source_methods.clear = function ( s )
 	openal.alSourcei ( s.id , openal_defs.AL_BUFFER , 0 )
-	assert(checkforerror())
+	al_assert ( )
 end
 
 source_methods.getvolume = function ( s )
 	openal.alGetSourcef ( s.id , openal_defs.AL_GAIN , float )
-	assert(checkforerror())
+	al_assert ( )
 	return float[0]
 end
 
 source_methods.setvolume = function ( s , v )
 	openal.alSourcef ( s.id , openal_defs.AL_GAIN , v )
-	assert(checkforerror())
+	al_assert ( )
 end
 
 source_methods.position = function ( s )
 	openal.alGetSourcei ( s.id , openal_defs.AL_SAMPLE_OFFSET , int )
-	assert(checkforerror())
+	al_assert ( )
 	return int[0]
 end
 
 source_methods.position_seconds = function ( s )
 	openal.alGetSourcef ( s.id , openal_defs.AL_SEC_OFFSET , float )
-	assert(checkforerror())
+	al_assert ( )
 	return float[0]
 end
 
@@ -275,7 +301,7 @@ source_mt.__gc = source_methods.delete
 function openal.newbuffers ( n )
 	local buffers = ffi.new ( "ALuint[?]" , n )
 	openal.alGenBuffers ( n , buffers )
-	assert(checkforerror())
+	al_assert ( )
 	ffi.gc ( buffers , function ( buffers )
 			print("GC BUFFERS")
 			return openal.alDeleteBuffers ( n , buffers )
@@ -302,7 +328,7 @@ function openal.buffer_info ( b )
 	openal.alGetBufferi ( b , openal_defs.AL_CHANNELS , int )
 	r.channels = int[0]
 
-	assert(checkforerror())
+	al_assert ( )
 	r.frames = r.size / ( r.channels * r.bits/8 )
 	r.duration =  r.frames / r.frequency
 
