@@ -294,6 +294,12 @@ source_methods.position_seconds = function ( s )
 	return float[0]
 end
 
+source_methods.current_buffer = function ( s )
+	openal.alGetSourcei ( s.id , openal_defs.AL_BUFFER , int )
+	al_assert ( )
+	return int[0]
+end
+
 
 source_mt.__gc = source_methods.delete
 
