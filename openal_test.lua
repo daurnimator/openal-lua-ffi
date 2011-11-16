@@ -1,7 +1,9 @@
-package.path = package.path .. ";./?/init.lua"
+
+package.path = "./?/init.lua;" .. package.path
+package.loaded [ "OpenAL" ] = dofile ( "init.lua" )
+local openal = require"OpenAL"
 
 local ffi = require"ffi"
-local openal = require"OpenAL"
 
 local dev = openal.opendevice ( )
 local ctx = openal.newcontext ( dev )

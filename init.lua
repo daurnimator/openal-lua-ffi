@@ -1,14 +1,10 @@
 -- FFI binding to OpenAL
 
+local rel_dir = assert ( debug.getinfo ( 1 , "S" ).source:match ( [=[^@(.-[/\]?)[^/\]*$]=] ) , "Current directory unknown" ) .. "./"
+
 local assert , error = assert , error
 local setmetatable = setmetatable
 local getenv = os.getenv
-
-local general 				= require"general"
-local current_script_dir 	= general.current_script_dir
-local reverse_lookup		= general.reverse_lookup
-
-local rel_dir = assert ( current_script_dir ( ) , "Current directory unknown" )
 
 local ffi 					= require"ffi"
 local ffi_util 				= require"ffi_util"
@@ -66,7 +62,8 @@ openal.format = {
 	["61CHN16"] 	= openal.alGetEnumValue ( "AL_FORMAT_61CHN16" ) ;
 	["71CHN16"] 	= openal.alGetEnumValue ( "AL_FORMAT_71CHN16" ) ;
 }
-reverse_lookup ( openal.format , openal.format )
+-- Make table work in reverse too
+for k , v in pairs ( openal.format ) do openal.format [ v ] = k end
 
 openal.format_to_channels = {
 	MONO8 			= 1 ;
