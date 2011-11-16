@@ -2,6 +2,7 @@
 
 local assert , error = assert , error
 local setmetatable = setmetatable
+local getenv = os.getenv
 
 local general 				= require"general"
 local current_script_dir 	= general.current_script_dir
@@ -16,26 +17,30 @@ local ffi_add_include_dir 	= ffi_util.ffi_add_include_dir
 local ffi_defs 				= ffi_util.ffi_defs
 local ffi_process_defines 	= ffi_util.ffi_process_defines
 
-ffi_add_include_dir [[C:\Program Files (x86)\OpenAL 1.1 SDK\include\]]
-ffi_add_include_dir [[/usr/include/AL/]]
-
-ffi_defs ( rel_dir .. [[defs.h]] , {
-		[[al.h]] ;
-		[[alc.h]] ;
-	} )
-local openal_defs = {}
-ffi_process_defines( [[al.h]] , openal_defs )
-ffi_process_defines( [[alc.h]], openal_defs )
-
-local openal_lib
 assert ( jit , "jit table unavailable" )
+local openal_lib
 if jit.os == "Windows" then
+	local basedir = getenv ( [[ProgramFiles(x86)]] ) or getenv ( [[ProgramFiles]] )
+	basedir = basedir .. [[\OpenAL 1.1 SDK\]]
+
+	ffi_add_include_dir ( basedir .. [[include\]] )
 	openal_lib = ffi.load ( [[OpenAL32]] )
 elseif jit.os == "Linux" or jit.os == "OSX" or jit.os == "POSIX" or jit.os == "BSD" then
+	ffi_add_include_dir [[/usr/include/AL/]]
 	openal_lib = ffi.load ( [[libopenal]] )
 else
 	error ( "Unknown platform" )
 end
+
+ffi_defs ( rel_dir .. [[al_defs.h]] , {
+		[[al.h]] ;
+		[[alc.h]] ;
+	} )
+
+local openal_defs = {}
+ffi_process_defines( [[al.h]] , openal_defs )
+ffi_process_defines( [[alc.h]], openal_defs )
+
 
 local openal = setmetatable ( { } , { __index = function ( t , k ) return openal_defs[k] or openal_lib[k] end ; } )
 
