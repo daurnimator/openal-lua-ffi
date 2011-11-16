@@ -1,3 +1,4 @@
+-- A test for ffi based OpenAL bindings
 
 package.path = "./?/init.lua;" .. package.path
 package.loaded [ "OpenAL" ] = dofile ( "init.lua" )
@@ -17,9 +18,9 @@ local buffers = openal.newbuffers ( NUM_BUFFERS )
 
 local BUFFER_SIZE = 440*100
 local frequency = 44100
-local format = openal.format.MONO16;
+local format = openal.format.MONO16
 local source_data = ffi.new ( "int16_t[?]" , BUFFER_SIZE )
-local source_len = ffi.sizeof( source_data )
+local source_len = ffi.sizeof ( source_data )
 
 --Generate sinusoidal test signal
 local m = 2*math.pi/frequency*440
@@ -31,11 +32,11 @@ end
 for i=0,NUM_BUFFERS-1 do
 	openal.alBufferData ( buffers[i] , format , source_data , source_len , frequency )
 end
-assert(openal.checkforerror())
+openal.assert ( )
 
 openal.alSourceQueueBuffers ( source[0] , NUM_BUFFERS , buffers )
 openal.alSourcePlay ( source[0] );
-assert(openal.checkforerror())
+openal.assert ( )
 
 local buffer = ffi.new ( "ALuint[1]" )
 local val = ffi.new ( "ALint[1]" )
@@ -49,7 +50,7 @@ while true do
                         openal.alSourceUnqueueBuffers ( source[0] , 1 , buffer )
                         openal.alBufferData ( buffer[0] , format , source_data , source_len , frequency )
                         openal.alSourceQueueBuffers ( source[0] , 1 , buffer )
-						assert(openal.checkforerror())
+						openal.assert ( )
 
 						progress = progress + BUFFER_SIZE/frequency
 						io.write(string.format("Played %f seconds @time %f\r",progress,os.clock()-time))
