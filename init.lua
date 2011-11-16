@@ -7,7 +7,6 @@ local getenv = os.getenv
 local general 				= require"general"
 local current_script_dir 	= general.current_script_dir
 local reverse_lookup		= general.reverse_lookup
-local add_dep 				= general.add_dependancy
 
 local rel_dir = assert ( current_script_dir ( ) , "Current directory unknown" )
 
@@ -160,19 +159,18 @@ function openal.alcGetCurrentContext ( ctx )
 	return current_context
 end
 
-function openal.newcontext(dev)
-	local ctx = assert ( openal.alcCreateContext ( dev , nil ) , "Can't create context" )
-
-	add_dep ( ctx , dev )
-
-	ffi.gc ( ctx , function ( ctx )
-			print("GC CONTEXT")
-			if ctx == current_context then
-				openal_lib.alcMakeContextCurrent ( nil )
-			end
-			openal.alcDestroyContext ( ctx )
-		end )
-
+local ctx_to_device = setmetatable ( { } , { __mode = "k" } )
+local function ctx_gc ( ctx )
+	print("GC CONTEXT")
+	ctx_to_device [ ctx ] = nil
+	if ctx == current_context then
+		openal_lib.alcMakeContextCurrent ( nil )
+	end
+	openal.alcDestroyContext ( ctx )
+end
+function openal.newcontext ( dev )
+	local ctx = ffi.gc ( assert ( openal.alcCreateContext ( dev , nil ) , "Can't create context" ) , ctx_gc )
+	ctx_to_device [ ctx ] = dev
 	return ctx
 end
 
@@ -190,10 +188,9 @@ end
 --- OpenAL Source
 local source_methods = { }
 local source_mt = { __index = source_methods }
-function openal.newsource()
+function openal.newsource ( )
 	openal.alGenSources ( 1 , uint )
-	local s = setmetatable ( { id = uint[0] } , source_mt )
-	add_dep ( s , current_context )
+	local s = setmetatable ( { id = uint[0] , ctx = current_context } , source_mt )
 	return s
 end
 
