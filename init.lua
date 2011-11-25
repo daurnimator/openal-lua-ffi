@@ -1,16 +1,13 @@
 -- FFI binding to OpenAL
 
-local rel_dir = assert ( debug.getinfo ( 1 , "S" ).source:match ( [=[^@(.-[/\]?)[^/\]*$]=] ) , "Current directory unknown" ) .. "./"
-
 local assert , error = assert , error
 local setmetatable = setmetatable
 local getenv = os.getenv
 
-local ffi 					= require"ffi"
-local ffi_util 				= require"ffi_util"
-local ffi_add_include_dir 	= ffi_util.ffi_add_include_dir
-local ffi_defs 				= ffi_util.ffi_defs
-local ffi_process_defines 	= ffi_util.ffi_process_defines
+local ffi                 = require"ffi"
+local ffi_util            = require"ffi_util"
+local ffi_add_include_dir = ffi_util.ffi_add_include_dir
+local ffi_defs            = ffi_util.ffi_defs
 
 assert ( jit , "jit table unavailable" )
 local openal_lib
@@ -27,15 +24,10 @@ else
 	error ( "Unknown platform" )
 end
 
-ffi_defs ( rel_dir .. [[al_defs.h]] , {
+local cdefs , openal_defs = ffi_defs ( [[al_funcs.h]] , [[al_defs.h]] , {
 		[[al.h]] ;
 		[[alc.h]] ;
 	} )
-
-local openal_defs = {}
-ffi_process_defines( [[al.h]] , openal_defs )
-ffi_process_defines( [[alc.h]], openal_defs )
-
 
 local openal = setmetatable ( { } , { __index = function ( t , k ) return openal_defs[k] or openal_lib[k] end ; } )
 
