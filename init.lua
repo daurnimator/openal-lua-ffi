@@ -132,7 +132,7 @@ openal.assert = al_assert
 
 function openal.opendevice ( name )
 	local dev = assert ( openal.alcOpenDevice ( name ) , "Can't Open Device" )
-	ffi.gc ( dev , function ( dev ) print("GC DEVICE") return openal.alcCloseDevice(dev) end )
+	ffi.gc ( dev , openal.alcCloseDevice end )
 	return dev
 end
 
@@ -150,7 +150,6 @@ end
 
 local ctx_to_device = setmetatable ( { } , { __mode = "k" } )
 local function ctx_gc ( ctx )
-	print("GC CONTEXT")
 	ctx_to_device [ ctx ] = nil
 	if ctx == current_context then
 		openal_lib.alcMakeContextCurrent ( nil )
@@ -184,7 +183,6 @@ function openal.newsource ( )
 end
 
 source_methods.delete = function ( s )
-	print("GC SOURCE")
 	uint[0] = s.id
 	openal.alDeleteSources ( 1 , uint )
 	al_assert ( )
@@ -300,7 +298,6 @@ function openal.newbuffers ( n )
 	openal.alGenBuffers ( n , buffers )
 	al_assert ( )
 	ffi.gc ( buffers , function ( buffers )
-			print("GC BUFFERS")
 			return openal.alDeleteBuffers ( n , buffers )
 		end )
 	return buffers
