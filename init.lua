@@ -132,7 +132,7 @@ openal.assert = al_assert
 
 function openal.opendevice ( name )
 	local dev = assert ( openal.alcOpenDevice ( name ) , "Can't Open Device" )
-	ffi.gc ( dev , openal.alcCloseDevice end )
+	ffi.gc ( dev , openal.alcCloseDevice )
 	return dev
 end
 
