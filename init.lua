@@ -17,8 +17,11 @@ if jit.os == "Windows" then
 
 	ffi_add_include_dir ( basedir .. [[include\]] )
 	openal_lib = ffi.load ( [[OpenAL32]] )
-elseif jit.os == "Linux" or jit.os == "OSX" or jit.os == "POSIX" or jit.os == "BSD" then
+elseif jit.os == "Linux" or jit.os == "POSIX" or jit.os == "BSD" then
 	ffi_add_include_dir [[/usr/include/AL/]]
+	openal_lib = ffi.load ( [[libopenal]] )
+elseif jit.os == "OSX" then
+	ffi_add_include_dir [[/System/Library/Frameworks/OpenAl.framework/Versions/A/Headers/]]
 	openal_lib = ffi.load ( [[libopenal]] )
 else
 	error ( "Unknown platform" )
